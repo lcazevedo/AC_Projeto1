@@ -1,0 +1,9 @@
+binary128 = 
+1 bit sinal + 15 bits expoente -> 2 bytes)
+112 bits mantissa -> 14 bytes
+
+como cada inteiro tem 2 bytes =>
+exponte = 1 inteiro
+mantissa = 7 inteiros
+
+
