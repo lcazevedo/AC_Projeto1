@@ -1,3 +1,5 @@
+//http://krashan.ppa.pl/articles/stringtofloat/
+
 binary128 = 
 1 bit sinal + 15 bits expoente -> 2 bytes)
 112 bits mantissa -> 14 bytes
@@ -6,4 +8,51 @@ como cada inteiro tem 2 bytes =>
 exponte = 1 inteiro
 mantissa = 7 inteiros
 
+Para operações + - * e / com IEEE:
+https://sites.google.com/a/sga.pucminas.br/puc2010-2_a417889/intro-ciencia-computacao/operacoes-ponto-flutuante-ieee754
 
+calculadore IEEE
+http://weitz.de/ieee/
+
+Pode ajudar para criar o binary128 em string
+http://www.ryanjuckett.com/programming/printing-floating-point-numbers/part-2/
+http://kurtstephens.com/files/p372-steele.pdf
+
+
+Um exemplo maluco de converter para string:
+https://stackoverflow.com/questions/59849740/how-can-i-convert-between-a-double-double-and-a-decimal-string
+
+//http://krashan.ppa.pl/articles/stringtofloat/
+
+referencia GNP
+http://web.mit.edu/gnu/doc/html/gmp_1.html
+http://web.mit.edu/gnu/doc/html/gmp_4.html
+
+
+exemplo do GNP -> mpz
+mpz_t n;
+    int flag;
+    /* 1. Initialize the number */
+    mpz_init(n);
+    mpz_set_ui(n,0);
+    /* 2. Parse the input string as a base 10 number */
+    flag = mpz_set_str(n,"101", 2);
+    if (flag != 0) {cout << "enrro" << endl;}; /* If flag is not 0 then the operation failed */
+    
+    /* Print n */
+    char* x;
+    x = mpz_get_str(NULL ,10,n);
+    cout << "n em decimal = " << x << endl;
+    x = mpz_get_str(NULL,2,n);
+    cout << "n em binario = " << x << endl;
+    
+    /* 3. Add one to the number */
+
+    mpz_add_ui(n,n,1); /* n = n + 1 */
+
+    /* 4. Print the result */
+
+    printf (" n +1 = ");
+    mpz_out_str(stdout,10,n);
+    printf ("\n");
+mpz_clear( n );

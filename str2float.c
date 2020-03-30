@@ -13,7 +13,8 @@ See LICENSE file.
 /* mantissa. Read more in the README.md file.                           */
 /*======================================================================*/
 
-
+#include <inttypes.h>
+#include <stdio.h>
 #include <stdint.h>
 
 #define DIGITS 18
@@ -176,7 +177,7 @@ static int parser(char *s, struct PrepNumber *pn)
 				else state = FSM_STOP;
 			break;
 
-			case FSM_C:  // pula os zeros inicia, se existirem 
+			case FSM_C:  // pula os zeros iniciais, se existirem 
 				if (c == '0') c = GETC(s);
 				else if (c == DPOINT)   // ou vai para parte de tratar parte decimal, se for ponto
 				{
@@ -186,7 +187,8 @@ static int parser(char *s, struct PrepNumber *pn)
 				else state = FSM_E;  // ou via para parte de tratar parte inteira, se for dígito
 			break;
 
-            // essa parte tem qu eter no meu laço. O meu formato de entrada não vai ter expoente de 10 declarado na string, mas tem que trabalhar inernamente
+            // essa parte tem que ter no meu laço. O meu formato de entrada não vai ter expoente de 10 
+			// declarado na string, mas tem que trabalhar internamente
 			case FSM_D:  // primeira parte parte para tratar a parte decimal.
 				if (c == '0')   // se tiver zeros logo depois do ponto, diminui em 1 o expoente do 10
 				{
@@ -272,7 +274,7 @@ static int parser(char *s, struct PrepNumber *pn)
 		}
 	}
 
-	if (expneg) expexp = -expexp;
+	if (expneg) expexp = -expexp;  // guarda o expoente d e10 no expoente final
 	pn->exponent += expexp;
 
 	if (pn->mantissa == 0)
@@ -438,4 +440,35 @@ double str2dbl(char *s)
 	}
 
 	return result;
+}
+
+int main() {
+    
+    struct PrepNumber pn;
+	union HexDouble hd;
+	int i;
+	double result;
+
+	pn.mantissa = 0;
+	pn.negative = 0;
+	pn.exponent = 0;
+	hd.u = DOUBLE_PLUS_ZERO;
+
+	char* s = (char*)"-0.75";
+	i = parser(s, &pn);
+
+	printf((i ==0 ? "OK\n" : "ERRO\n"));
+	printf("sinal = %d\n", pn.negative);
+	printf("expoente = %" PRId32 "\n", pn.exponent);
+	printf("mantissa: %" PRIu64 "\n", pn.mantissa);
+	
+	result = converter(&pn);
+
+	printf("Depois de converter... \n");
+	printf("double = %f\n", result);
+	printf("sinal = %d\n", pn.negative);
+	printf("expoente = %" PRId32 "\n", pn.exponent);
+	printf("mantissa: %" PRIu64 "\n", pn.mantissa);
+	
+	return 0;
 }
