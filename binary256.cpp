@@ -10,12 +10,12 @@
 
 using namespace std;
 
-#define EXPOENTE_OFFSET 16383  // offset para calculo do expoente (posivo e negativo) com 15 bits
-#define EXPOENTE_OFFSET_NEGATIVO -16383  // offset negativo para usar em comparações
-#define EXPOENTE_MAXIMO 32767  // máximo unsigned int do expoente, para usar em comparações
-#define MANTISSA_BITS 112 // número de bits para a mantissa 
-#define EXPOENTE_BITS 15 // bit do unsigned int que guarda o sinal. Bit mais significativo
-#define BIT_SINAL 15 // bit do unsigned int que guarda o sinal. Bit mais significativo
+#define EXPOENTE_OFFSET 262143  // offset para calculo do expoente (posivo e negativo) com 15 bits
+#define EXPOENTE_OFFSET_NEGATIVO -262143  // offset negativo para usar em comparações
+#define EXPOENTE_MAXIMO 524287  // máximo unsigned int do expoente, para usar em comparações
+#define MANTISSA_BITS 236 // número de bits para a mantissa 
+#define EXPOENTE_BITS 19 // bit do unsigned int que guarda o sinal. Bit mais significativo
+#define BIT_SINAL 19 // bit do unsigned int que guarda o sinal. Bit mais significativo
 // tem um 224 em mutiplicabtsets !!!
 
 
@@ -25,7 +25,7 @@ using namespace std;
 #define CHKBIT(n, p) ((n >> p) & 1U)
 
 // efinição da classe
-class binary128 {
+class binary256 {
 
     private:
         // constantes
@@ -34,7 +34,7 @@ class binary128 {
 
         // variáveis       
         struct myFloat {
-            unsigned short int s_exp = 0;  
+            unsigned int s_exp = 0;  
             bitset<MANTISSA_BITS> m;  
         } mf;
 
@@ -52,8 +52,8 @@ class binary128 {
 
     public: 
         // construtor
-        binary128() {};
-        binary128(string);  // construtor
+        binary256() {};
+        binary256(string);  // construtor
 
         
         // funções
@@ -63,21 +63,21 @@ class binary128 {
         double to_Double(void); // retorna o valor em formato float, caso caiba em 8 bytes, senão retorna "inf"
         
         // sobrecarga de operadores
-        binary128 operator+(binary128 b);
-        binary128 operator-(binary128 b);
-        binary128 operator*(binary128 b);
-        binary128 operator/(binary128 b);
+        binary256 operator+(binary256 b);
+        binary256 operator-(binary256 b);
+        binary256 operator*(binary256 b);
+        binary256 operator/(binary256 b);
         
 };
 
 /************
 Construtur da classe:
 Entrada:
-    valor -> string com o valor a ser guardado como float no forma binary128
+    valor -> string com o valor a ser guardado como float no forma binary256
 Saída:
     nenuma
 ************/
-binary128::binary128(string valor){
+binary256::binary256(string valor){
 
     // valida a string recebida e separa as partes inteira e decimal
     if (!parser(valor)){
@@ -93,7 +93,7 @@ Entrada:
 Saída:
     resultado da soma por bits de v1 e v2
 ************/
-bitset<MANTISSA_BITS + 1> binary128::somaBitsets(bitset<MANTISSA_BITS + 1> v1, bitset<MANTISSA_BITS + 1> v2, bool &overflow){
+bitset<MANTISSA_BITS + 1> binary256::somaBitsets(bitset<MANTISSA_BITS + 1> v1, bitset<MANTISSA_BITS + 1> v2, bool &overflow){
 
     bitset<MANTISSA_BITS + 1> carry, retorno = v1;
 	while (v2 != 0) 
@@ -115,7 +115,7 @@ Entrada:
 Saída:
     resultado da subtração de v1 por v2
 ************/
-bitset<MANTISSA_BITS + 1> binary128::subtraiBitsets(bitset<MANTISSA_BITS + 1> v1, bitset<MANTISSA_BITS + 1> v2, bool  &underflow){
+bitset<MANTISSA_BITS + 1> binary256::subtraiBitsets(bitset<MANTISSA_BITS + 1> v1, bitset<MANTISSA_BITS + 1> v2, bool  &underflow){
     bitset<MANTISSA_BITS + 2> empresta, n1(v1.to_string()), n2(v2.to_string());
     while (n2 != 0) 
 	{ 
@@ -137,7 +137,7 @@ Entrada:
 Saída:
     resultado da multiplicação por bits de v1 e v2
 ************/
-bitset<MANTISSA_BITS + 1> binary128::multiplicaBitsets(bitset<MANTISSA_BITS + 1> v1, bitset<MANTISSA_BITS + 1> v2, int &indice) {
+bitset<MANTISSA_BITS + 1> binary256::multiplicaBitsets(bitset<MANTISSA_BITS + 1> v1, bitset<MANTISSA_BITS + 1> v2, int &indice) {
     mpz_t n1, n2;
     string retornoStr;
     char *x;
@@ -148,15 +148,15 @@ bitset<MANTISSA_BITS + 1> binary128::multiplicaBitsets(bitset<MANTISSA_BITS + 1>
     if (mpz_set_str(n1, v1.to_string().c_str(), 2)) {throw "Error!";};
     if (mpz_set_str(n2, v2.to_string().c_str(), 2)) {throw "Error!";};
     
-    // faz a multiplicação e retorna paa string em binário
+    // faz a multiplicação e retorna a string em binário
     // ao fazer a conta considerando todos os bits como parte de um inteiro, 
     // sendo que o valor da mantissa foi acrescido apenas de um "1" inteiro, 
-    // considero como um exponete -112
+    // considero como um exponete -236 (número de bits da mantissa)
     mpz_mul(n1, n1, n2);  // n1 = n1 * n2
     retornoStr = mpz_get_str(NULL ,2, n1);  // converte n1 para string com base 2 (binario)
     
-    // como considerei acima que cada número tinha expoente -112, devo "retornar a vírgula" 224 casas para esquerda
-    indice = retornoStr.length() - 224 - 1; // menos 1 pois tem o 1 que fica como parte inteira
+    // como considerei acima que cada número tinha expoente -236, devo "retornar a vírgula" 472 casas para esquerda
+    indice = retornoStr.length() - 472 - 1; // menos 1 pois tem o 1 que fica como parte inteira
     
     // guarda apenas os 113 dígitos da esquerda
     bitset<MANTISSA_BITS + 1> resultado(retornoStr.substr(0, MANTISSA_BITS + 1));
@@ -177,7 +177,7 @@ Entrada:
 Saída:
     resultado da divisão por bits de v1 por v2
 ************/
-bitset<MANTISSA_BITS + 1> binary128::divideBitsets(bitset<MANTISSA_BITS + 1> v1, bitset<MANTISSA_BITS + 1> v2, int &indice) {
+bitset<MANTISSA_BITS + 1> binary256::divideBitsets(bitset<MANTISSA_BITS + 1> v1, bitset<MANTISSA_BITS + 1> v2, int &indice) {
     mpz_t n1, n2, resto, resultado;
     string retornoStr, resultadoStr;
     char *x;
@@ -190,15 +190,14 @@ bitset<MANTISSA_BITS + 1> binary128::divideBitsets(bitset<MANTISSA_BITS + 1> v1,
     mpz_init(resto);
 
     // atribui n1 e n2 removendo os zeros da direita, pois como são teoricamente casas decimais, não são significativas
-    string temp;
-    temp = v1.to_string();
+    retornoStr = v1.to_string();
     //cout << "v1 " << temp << endl;
     //while(temp[temp.length() - 1] == '0') temp = temp.substr(0, temp.length() - 1);
-    if (mpz_set_str(n1, temp.c_str(), 2)) {throw "Error!";};
-    temp = v2.to_string();
+    if (mpz_set_str(n1, retornoStr.c_str(), 2)) {throw "Error!";};
+    retornoStr = v2.to_string();
     //cout << "v1 " << temp << endl;
     //while(temp[temp.length() - 1] == '0') temp = temp.substr(0, temp.length() - 1);
-    if (mpz_set_str(n2, temp.c_str(), 2)) {throw "Error!";};
+    if (mpz_set_str(n2, retornoStr.c_str(), 2)) {throw "Error!";};
     
     // faz a multiplicação e retorna para string em binário
     // ao fazer a conta considerando todos os bits como parte de um inteiro, 
@@ -220,14 +219,15 @@ bitset<MANTISSA_BITS + 1> binary128::divideBitsets(bitset<MANTISSA_BITS + 1> v1,
         indice = -1;
     }
 
+    
     // continua a divisão do resto, ajustando o índice
-    string xx;
+    //string xx;
     int i = 1;
     while (mpz_cmp_ui(resto, 0) != 0 && i < (MANTISSA_BITS + 1))
     {
-        xx = mpz_get_str(NULL ,2, resto);
+        //xx = mpz_get_str(NULL ,2, resto);
         //cout << "resto antes " << mpz_get_str(NULL ,2, resto) << "tamanho " << xx.length() << endl;
-        xx = (string(mpz_get_str(NULL ,2, resto)) + "0");
+        //xx = (string(mpz_get_str(NULL ,2, resto)) + "0");
         //cout << "resto com zero " << (char*)(string(mpz_get_str(NULL ,2, resto)) + "0").c_str() << "tamanho " << xx.length() << endl;
         mpz_set_str(resto,  (char*)(string(mpz_get_str(NULL ,2, resto)) + "0").c_str(), 2);
         //cout << "n2 " << mpz_get_str(NULL ,2, n2) << endl;
@@ -246,16 +246,18 @@ bitset<MANTISSA_BITS + 1> binary128::divideBitsets(bitset<MANTISSA_BITS + 1> v1,
 
     //cout << "retorno parcial " << retornoStr << endl;
 
+    
+
     // retira os zeros da esquerda, reajustando o índice
     while (retornoStr[0] == '0'){
     //    indiceAjustado--;
         retornoStr = retornoStr.substr(1); 
     }
-
+    
     // adiciona zeros à direita para completar o tamanho, se precisar
     if (retornoStr.length() < (MANTISSA_BITS + 1))
         retornoStr += string((MANTISSA_BITS + 1) - retornoStr.length(),'0');
-
+    
     // guarda apenas os 113 dígitos da esquerda
     bitset<MANTISSA_BITS + 1> retorno(retornoStr);
     
@@ -270,7 +272,7 @@ Entrada:
 Saída:
     int -> valor o expoente
 ************/
-int binary128::getExpoente(){
+int binary256::getExpoente(){
     int expoente = 0;
 
     // faz uma cópia para calcular
@@ -292,7 +294,7 @@ Entrada:
 Saída:
     não há
 ************/
-void binary128::setExpoente(int e){
+void binary256::setExpoente(int e){
     
     // guarda o sinal atual
     int sinal = getSinal();
@@ -327,7 +329,7 @@ Entrada:
 Saída:
     Bool-> indica se o valor pode ser convertido (true) ou não (false)
 ************/
-bool binary128::parser(string valor){
+bool binary256::parser(string valor){
     
     // em etapas:
     // 1 - guarda o sinal e separa as pateste inteira e decimal
@@ -469,7 +471,7 @@ Entrada:
 Saída:
     String-> representação do float armazenado
 ************/
-string binary128::to_stringBinarioIEE(void){
+string binary256::to_stringBinarioIEE(void){
     string myFloat = "";
 
     // pega o sinal e limpa o inteiro para calcular o expoente
@@ -500,7 +502,7 @@ Entrada:
 Saída:
     String-> representação do float armazenado
 ************/
-string binary128::to_stringDecimal(void){
+string binary256::to_stringDecimal(void){
     string myFloat = "";
 
     // verfica exibição de overflow e undeflow
@@ -571,8 +573,8 @@ string binary128::to_stringDecimal(void){
     // coloca o sinal
     if (s) myFloat = "-" + myFloat;
 
-    //cout << "controle 7" << endl;
-    
+    //cout << "mfloat leght " << myFloat.length() << endl;
+    //int x = myFloat.length();
     myFloat = myFloat.substr(0, myFloat.length() - decimais) + "." + myFloat.substr(myFloat.length() - decimais);
     
     // elimina os zeros não significativos da direita
@@ -590,7 +592,7 @@ Entrada:
 Saída:
     Float: valor armazenado em formato float
 ************/
-float binary128::to_Float(void){
+float binary256::to_Float(void){
     float myFloat = 1;
 
     //cout << "myfloat = " << myFloat << endl;
@@ -624,7 +626,7 @@ Entrada:
 Saída:
     Double: valor armazenado em formato double
 ************/
-double binary128::to_Double(void){
+double binary256::to_Double(void){
     double myDouble = 1;
 
     //cout << "myfloat = " << myFloat << endl;
@@ -652,14 +654,14 @@ double binary128::to_Double(void){
 }
 
 /************
-Sobrecarga do operador adição, que permite somar dois números do tipo binary128
+Sobrecarga do operador adição, que permite somar dois números do tipo binary256
 Parâmetros:
-    binary128 = binary128 + biary128
+    binary256 = binary256 + biary128
 ************/
-binary128 binary128::operator+(binary128 b){
+binary256 binary256::operator+(binary256 b){
     
     // cria uma cópia do valor atual para calcular o retorno
-    binary128 retorno;
+    binary256 retorno;
     retorno.mf = mf;
     
     // faz uma cópia das mantissas para poder adicionar o 1 oculto e realizar as operações
@@ -734,8 +736,7 @@ binary128 binary128::operator+(binary128 b){
         //cout << "fez subtração m1 " << m1 << "expoente " << retorno.getExpoente() << endl;
     }
 
-    
-    // Normaliza o resultado, retirando os zeros da esquerda da mantissa e ajusta o expoente. 
+        // Normaliza o resultado, retirando os zeros da esquerda da mantissa e ajusta o expoente. 
     // Isto permite retirar o "1" que ficará a esquerda na mantissa e não é guardado
     if (m1 != zero){
         while (m1[MANTISSA_BITS] == 0){  
@@ -755,11 +756,11 @@ binary128 binary128::operator+(binary128 b){
 }
 
 /************
-Sobrecarga do operador subtração, que permite subtrair dois números do tipo binary128
+Sobrecarga do operador subtração, que permite subtrair dois números do tipo binary256
 Parâmetros:
-    binary128 = binary128 - biary128
+    binary256 = binary256 - biary128
 ************/
-binary128 binary128::operator-(binary128 b){
+binary256 binary256::operator-(binary256 b){
     
     // Troca o sinal do valor recebido para usar a soma
     int sinal = b.getSinal();
@@ -771,12 +772,12 @@ binary128 binary128::operator-(binary128 b){
 }
 
 /************
-Sobrecarga do operador multiplicação, que permite multiplicar dois números do tipo binary128
+Sobrecarga do operador multiplicação, que permite multiplicar dois números do tipo binary256
 Parâmetros:
-    binary128 = binary128 * biary128
+    binary256 = binary256 * biary128
 ************/
-binary128 binary128::operator*(binary128 b){
-    binary128 retorno;
+binary256 binary256::operator*(binary256 b){
+    binary256 retorno;
 
     // Multiplica as mantissas
     bitset<MANTISSA_BITS + 1> m1(mf.m.to_string());
@@ -821,10 +822,10 @@ binary128 binary128::operator*(binary128 b){
 /************
 Sobrecarga do operador divisão, que permite divdir o numero de referência pelo valor em b
 Parâmetros:
-    binary128 = binary128 / biary128
+    binary256 = binary256 / biary128
 ************/
-binary128 binary128::operator/(binary128 b){
-    binary128 retorno;
+binary256 binary256::operator/(binary256 b){
+    binary256 retorno;
 
     // Divide as mantissas
     bitset<MANTISSA_BITS + 1> m1(mf.m.to_string());
@@ -861,7 +862,7 @@ binary128 binary128::operator/(binary128 b){
     retorno.setExpoente(e);
 
     // ajusta a mantissa
-    for (int i = MANTISSA_BITS - 1; i >= 0; i--){
+    for (int i = (MANTISSA_BITS - 1); i >= 0; i--){
         retorno.mf.m[i] = m[i];
     }
     
@@ -881,59 +882,61 @@ int numeroAleatorio(int menor, int maior) {
 
 int main() {
 
- /*
+    
     string s1, s2;
-    binary128 x, y, z;
+    binary256 x, y, z;
     srand((unsigned)time(0)); //para gerar números aleatórios reais.
     for (int i = 0; i < 10; i++){
         s1 = to_string(numeroAleatorio(1, 1000))+"."+to_string(numeroAleatorio(1, 100000000))+to_string(numeroAleatorio(1, 100000000));
-        s2 = "-"+to_string(numeroAleatorio(1, 1000))+"."+to_string(numeroAleatorio(1, 100000000));
-        x = binary128(s1);
-        y = binary128(s2);
-        //z = x/y;
-        //cout << s1+" / "+s2+ " = " <<  fixed << setprecision(7) << (float)atof(s1.c_str())/atof(s2.c_str()) << " <==> " << z.to_Float() << endl;
+        s2 = to_string(numeroAleatorio(1, 1000))+"."+to_string(numeroAleatorio(1, 100000000));
+        x = binary256(s1);
+        y = binary256(s2);
+        
+        z = x/y;
+        cout << s1+" / "+s2+ " = " <<  fixed << setprecision(10) << (double)stod(s1.c_str())/stod(s2.c_str()) << " <==> " << z.to_stringDecimal() << endl;
    
         //z = x*y;
         //cout << s1+" * "+s2+ " = " <<  fixed << setprecision(10) << (double)(stod(s1.c_str())*stod(s2.c_str())) << " <==> " << z.to_Double() << endl;
         //z = x-y;
         //cout << s1+" - "+s2+ " = " <<  fixed << setprecision(10) << (double)(atof(s1.c_str())-atof(s2.c_str())) << " <==> " << z.to_Double() << endl;
-        z = x+y;
-        cout << s1+" + "+s2+ " = " <<  fixed << setprecision(10) << (double)(stod(s1.c_str())+stod(s2.c_str())) << " <==> " << z.to_Double() << endl;
+        //z = x+y;
+        //cout << s1+" + "+s2+ " = " <<  fixed << setprecision(10) << (double)(stod(s1.c_str())+stod(s2.c_str())) << " <==> " << z.to_stringDecimal() << endl;
         
         //cout << " tostring " << x.to_stringDecimal() << " <==> " << s1 << endl;
     
     }
     
-*/
+
 
 /*
    string s1, s2;
-    s1 = "978.55503840";
-    s2 = "145.44353210";
+    s1 = "13.1828626045730441";
+    s2 = "210.77826774";
 
     // certo
     //s1 = "75.79";
     //s2 = "53.86";
 
-    cout << "criando binary 1" << endl;
-    binary128 x = binary128(s1);
-    cout << "criando binary 2" << endl;
-    binary128 y = binary128(s2);
-    cout << "somando" << endl;
-    binary128 z = x + y;
+    //cout << "criando binary 1" << endl;
+    binary256 x = binary256(s1);
+    //cout << "criando binary 2" << endl;
+    binary256 y = binary256(s2);
+    //cout << "somando" << endl;
+    binary256 z = x / y;
     cout << "x: " << x.to_stringBinarioIEE() << endl;
     cout << "y: " << y.to_stringBinarioIEE() << endl;
     cout << "z: " << z.to_stringBinarioIEE() << endl;
-    cout << "z: " << fixed << setprecision(7) << z.to_Float() << endl;
-    cout << "resultado " << fixed << setprecision(7) << (float)(atof(s1.c_str())+atof(s2.c_str())) << endl;
-    */
+    cout << "z: " << z.to_stringDecimal() << endl;
+    cout << "resultado " << fixed << setprecision(7) << (float)(atof(s1.c_str())/atof(s2.c_str())) << endl;
+*/    
 
-   
+
+/*
     string s1 = "0.5005";
     string s2 = "0.75";
-    binary128 x, y, z;
-    x = binary128(s1);
-    y = binary128(s2);
+    binary256 x, y, z;
+    x = binary256(s1);
+    y = binary256(s2);
         //z = x/y;
         //cout << s1+" / "+s2+ " = " <<  fixed << setprecision(7) << (float)atof(s1.c_str())/atof(s2.c_str()) << " <==> " << z.to_Float() << endl;
    
@@ -946,10 +949,7 @@ int main() {
         //cout << " tostring " << x.to_stringDecimal() << " <==> " << s1 << endl;
     
         cout << "em string " << z.to_stringDecimal() << endl; 
-    
- 
-
-
+     */   
     
 }
     

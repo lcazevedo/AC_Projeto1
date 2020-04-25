@@ -1,3 +1,14 @@
+DECIMAL32:
+https://en.wikipedia.org/wiki/Decimal32_floating-point_format
+
+usar o Binary integer significand field (BID) e não o DPD
+
+aritimética:
+http://speleotrove.com/decimal/daops.html
+http://speleotrove.com/decimal/daops.html#refaddsub
+
+
+
 //http://krashan.ppa.pl/articles/stringtofloat/
 
 binary128 = 
@@ -7,6 +18,10 @@ binary128 =
 como cada inteiro tem 2 bytes =>
 exponte = 1 inteiro
 mantissa = 7 inteiros
+
+
+conversor binario decimal
+https://clevert.com.br/t/pt-br/base-convert
 
 Para operações + - * e / com IEEE:
 https://sites.google.com/a/sga.pucminas.br/puc2010-2_a417889/intro-ciencia-computacao/operacoes-ponto-flutuante-ieee754
